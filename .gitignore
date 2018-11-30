@@ -1,0 +1,9 @@
+#Folders
+node_modules/
+.git/
+build/vendor/
+.cookies/
+.ssl/
+
+#Files
+.env
