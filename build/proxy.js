@@ -21,11 +21,23 @@ const	express			= 	require("express"),
 										)
 									)
 								) :
-								new ToughCookie.CookieJar(undefined,{looseMode:true});
+								new ToughCookie.CookieJar(undefined,{looseMode:true}),
+		sslDomains	=	fs.existsSync(".ssl/sslDomains.json") ?
+						JSON.parse(fs.readFileSync(
+							pathParser.join(__dirname,".ssl/sslDomains.json"),
+							{encoding:"utf8"}
+						)) :
+						{https:[],http:[]};
 
 proxyServer.on('proxyReq', (proxyReq, req) => {
 	proxyReq.setHeader('user-agent', process.env.USER_AGENT);
 	proxyReq.removeHeader('cookie');
+	for (let header of ["origin","referer"]) {
+		if (req.headers.hasOwnProperty(header)) {
+			if (req.protocol === "http") proxyReq.setHeader(header, req.headers[header].replace(/^https/gi,"http"));
+			else if (req.protocol === "https") proxyReq.setHeader(header, req.headers[header].replace(/^http:/gi,"https:"));
+		}
+	}
 	cookieJar.getCookies(
 		url.format({protocol:req.protocol,host:req.hostname,pathname:req.path}),
 		(err,cookies)=>{
@@ -44,12 +56,14 @@ proxyServer.on('proxyRes', (proxyRes, req, res) => {
 			cookieJar.setCookie(
 				ToughCookie.Cookie.parse(cookie,{loose:true}),
 				url.format({protocol:req.protocol,host:req.hostname,pathname:req.path}),
+                {loose:true},
 				(err,cookie)=>{
 					if (err && /^Cookie not in this host's domain/gi.test(err.message) && cookie) {
 						console.log(err.message);
 						cookieJar.setCookie(
 							ToughCookie.Cookie.parse(cookie,{loose:true}),
 							undefined,
+							{loose:true},
 							(err,cookie)=>{if (err) console.log(err);}
 						);
 					}
@@ -67,9 +81,14 @@ proxyServer.on('proxyRes', (proxyRes, req, res) => {
 
 
 app.all("*",(req,res)=>{
+	let protocol =	sslDomains.http.includes(req.hostname) ? "http" :
+					(
+						sslDomains.https.includes(req.hostname) ? "https" :
+						req.protocol
+					)
 	console.log(
 		`Request for ${url.format({
-			protocol:	req.protocol,
+			protocol:	protocol,
 			host:		req.hostname,
 			pathname:	req.originalUrl
 		})}`
@@ -79,7 +98,7 @@ app.all("*",(req,res)=>{
 		req,res,
 		{
 			target: url.format({
-				protocol:	req.protocol,
+				protocol:	protocol,
 				host:		req.hostname
 			}),
 			changeOrigin: true,
