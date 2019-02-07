@@ -81,18 +81,12 @@ proxyServer.on('proxyRes', (proxyRes, req, res) => {
 
 
 app.all("*",(req,res)=>{
-	let protocol =	sslDomains.http.includes(req.hostname) ? "http" :
-					(
-						sslDomains.https.includes(req.hostname) ? "https" :
-						req.protocol
-					)
-	console.log(
-		`Request for ${url.format({
-			protocol:	protocol,
-			host:		req.hostname,
-			pathname:	req.originalUrl
-		})}`
-	);
+	let protocol =	sslDomains.http.includes(req.hostname) ?
+			"http" :
+			(
+				sslDomains.https.includes(req.hostname) ? "https" :
+				req.protocol
+			);
 
 	proxyServer.web(
 		req,res,

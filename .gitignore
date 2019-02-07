@@ -3,7 +3,8 @@ node_modules/
 .git/
 build/vendor/
 .cookies/
-.ssl/
 
 #Files
 .env
+build/.ssl/*
+!build/.ssl/*.dist
