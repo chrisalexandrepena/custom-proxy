@@ -27,7 +27,7 @@ let dependencies = [];
 function movevendor(cb) {
     for (let dep of dependencies) {
         if (fs.existsSync(pathParser.join(__dirname,`build/vendor/${dep}`))) del.sync(pathParser.join(__dirname,`build/vendor/${dep}`));
-        if (fs.existsSync(pathParser.join(paths[dep],"build"))) {
+        if (fs.existsSync(pathParser.join(paths[dep],"build")) && dep !== "APICallers") {
             gulp
                 .src(pathParser.join(paths[dep],"build/**/*"))
                 .pipe(
@@ -45,8 +45,6 @@ function movevendor(cb) {
                 );
         }
     }
-    gulp.src(`${paths.APICallers}/src/**/*`)
-        .pipe(gulp.dest("./build/vendor/APICallers"));
     cb();
 }
 
