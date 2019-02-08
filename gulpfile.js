@@ -26,13 +26,13 @@ let dependencies = [];
 
 function movevendor(cb) {
     for (let dep of dependencies) {
-        if (fs.existsSync(pathParser.join(__dirname,`build/vendor/${dep}`))) del.sync(pathParser.join(__dirname,`build/vendor/${dep}`));
+        if (fs.existsSync(pathParser.join(__dirname,`app/vendor/${dep}`))) del.sync(pathParser.join(__dirname,`app/vendor/${dep}`));
         if (fs.existsSync(pathParser.join(paths[dep],"build")) && dep !== "APICallers") {
             gulp
                 .src(pathParser.join(paths[dep],"build/**/*"))
                 .pipe(
                     gulp.dest(
-                        pathParser.join(__dirname,`build/vendor/${dep}`)
+                        pathParser.join(__dirname,`app/vendor/${dep}`)
                     )
                 );
         }else if (fs.existsSync(pathParser.join(paths[dep],"src"))) {
@@ -40,7 +40,7 @@ function movevendor(cb) {
                 .src(pathParser.join(paths[dep],"src/**/*"))
                 .pipe(
                     gulp.dest(
-                        pathParser.join(__dirname,`build/vendor/${dep}`)
+                        pathParser.join(__dirname,`app/vendor/${dep}`)
                     )
                 );
         }
@@ -49,30 +49,30 @@ function movevendor(cb) {
 }
 
 function checkstructure(cb) {
-    if (!fs.existsSync(pathParser.join(__dirname,"build"))) fs.mkdirSync(pathParser.join(__dirname,"build"));
-    if (!fs.existsSync(pathParser.join(__dirname,"build/.cookies"))) fs.mkdirSync(pathParser.join(__dirname,"build/.cookies"));
-    if (!fs.existsSync(pathParser.join(__dirname,"build/.ssl"))) fs.mkdirSync(pathParser.join(__dirname,"build/.ssl"));
-    if (!fs.existsSync(pathParser.join(__dirname,"build/.ssl/ssl.key"))) {
+    if (!fs.existsSync(pathParser.join(__dirname,"app"))) fs.mkdirSync(pathParser.join(__dirname,"app"));
+    if (!fs.existsSync(pathParser.join(__dirname,"app/.cookies"))) fs.mkdirSync(pathParser.join(__dirname,"app/.cookies"));
+    if (!fs.existsSync(pathParser.join(__dirname,"app/.ssl"))) fs.mkdirSync(pathParser.join(__dirname,"app/.ssl"));
+    if (!fs.existsSync(pathParser.join(__dirname,"app/.ssl/ssl.key"))) {
         spawnSync(
             "openssl",
             [
                 "genrsa",
                 "-out",
-                pathParser.join(__dirname,"build/.ssl/ssl.key"),
+                pathParser.join(__dirname,"app/.ssl/ssl.key"),
                 "2048"
             ]
         );
     }
-    if (!fs.existsSync(pathParser.join(__dirname,"build/.ssl/ssl.crt"))) spawnSync(
+    if (!fs.existsSync(pathParser.join(__dirname,"app/.ssl/ssl.crt"))) spawnSync(
         "openssl",
         [
             "req",
             "-new",
             "-x509",
             "-key",
-            pathParser.join(__dirname,"build/.ssl/ssl.key"),
+            pathParser.join(__dirname,"app/.ssl/ssl.key"),
             "-out",
-            pathParser.join(__dirname,"build/.ssl/ssl.crt"),
+            pathParser.join(__dirname,"app/.ssl/ssl.crt"),
             "-days",
             "9999",
             "-subj",
@@ -83,7 +83,7 @@ function checkstructure(cb) {
 }
 
 gulp.task("sync",cb=>{
-    for (let e of ["build/",".env","package*"]) {
+    for (let e of ["app/",".env","package*"]) {
         execSync(`rsync ${/\*/gi.test(e)||fs.statSync(e).isFile() ? "-vu" : "-rvu"} ${pathParser.join(__dirname,e)} ${process.env.remote_user}@${process.env.remote_server}:${process.env.remote_projectpath} --exclude "node_modules" --exclude ".cookies/*" --exclude "*.dist"${/\*/gi.test(e)||fs.statSync(e).isFile() ? "" : " --delete"}`);
     }
     execSync(`ssh ${process.env.remote_user}@${process.env.remote_server} 'cd ${process.env.remote_projectpath} && npm i'`);

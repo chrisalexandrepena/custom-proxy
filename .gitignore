@@ -1,10 +1,10 @@
 #Folders
 node_modules/
 .git/
-build/vendor/
+app/vendor/
 .cookies/
 
 #Files
 .env
-build/.ssl/*
-!build/.ssl/*.dist
+app/.ssl/*
+!app/.ssl/*.dist
